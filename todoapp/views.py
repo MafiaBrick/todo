@@ -1,8 +1,11 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,get_object_or_404
 from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.contrib.auth import login,logout,authenticate
+from .forms import TodoForm
+from .models import Todo
+from django.views.generic.detail import DetailView
 # Create your views here.
 
 def signup(request):
@@ -20,8 +23,14 @@ def signup(request):
 
         else:
             return render (request, 'todoapp/signup.html', {'form':UserCreationForm(),'error':'Пароли не совпадают'})
+
+
+
 def currenttodos(request):
-    return render(request,'todoapp/currenttodos.html')
+    data = Todo.objects.filter(user = request.user,datecompleat__isnull = True)
+    return render(request,'todoapp/currenttodos.html',{'data':data})
+
+
 
 
 def logoutuser(request):
@@ -42,3 +51,20 @@ def loginuser(request):
         else:
             login(request, user)
             return redirect('home')
+
+def addtodo(request):
+    if request.method == 'GET':
+        return render(request,'todoapp/addtodo.html',{'form':TodoForm()})
+    else:
+        try:
+            infoForm = TodoForm(request.POST)
+            newTodo = infoForm.save(commit=False)
+            newTodo.user = request.user
+            newTodo.save()
+            return redirect('currenttodos')
+        except ValueError:
+            return render(request,'todoapp/addtodo.html',{'form':TodoForm(),'error':'Введены некоректные данные, попробуйте снова'})
+
+def detailtodo(request,todo_id):
+    todo = get_object_or_404(Todo,pk = todo_id, user = request.user)
+    return render(request, 'todoapp/detailtodo.html', {'datatodo':todo})

@@ -1,5 +1,16 @@
 {% extends 'todoapp/base.html' %}
 
 {% block content  %}
-123
+<ul>
+  {% for el in data %}
+    <li>
+      <a href="{% url 'detailtodo' el.id %}">
+    {% if el.impotantFlag %}<b>{% endif %}{{el.title}}{% if el.impotantFlag %}</b>{% endif %}
+      {% if el.memo %}
+        - {{el.memo}}
+      {% endif %}
+      </a>
+    </li>
+  {% endfor %}
+  </ul>
 {% endblock %}
