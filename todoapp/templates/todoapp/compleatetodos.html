@@ -3,12 +3,7 @@
 {% block content  %}
 <div class="row justify-content-center mt-5">
   <div class="col-md-5">
-    {% if data %}
-    <h2>Текущие заметки</h2>
-    {% else %}
-    <h2>У вас нет заметок</h2><br>
-    <a class = 'btn btn-warning' href="{% url 'addtodo' %}">Добавить заметку</a>
-    {% endif %}
+    <h2>Выполненные заметки</h2>
   </div>
 </div>
 <div class="row justify-content-center mt-5">

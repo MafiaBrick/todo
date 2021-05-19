@@ -6,6 +6,8 @@ from django.contrib.auth import login,logout,authenticate
 from .forms import TodoForm
 from .models import Todo
 from django.views.generic.detail import DetailView
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 
 def signup(request):
@@ -25,10 +27,14 @@ def signup(request):
             return render (request, 'todoapp/signup.html', {'form':UserCreationForm(),'error':'Пароли не совпадают'})
 
 
-
+@login_required
 def currenttodos(request):
-    data = Todo.objects.filter(user = request.user,datecompleat__isnull = True)
+    data = Todo.objects.filter(user = request.user,datecompleat__isnull = True).order_by('-date')
     return render(request,'todoapp/currenttodos.html',{'data':data})
+@login_required
+def compleatetodos(request):
+    data = Todo.objects.filter(user = request.user,datecompleat__isnull = False)
+    return render(request,'todoapp/compleatetodos.html',{'data':data})
 
 
 
@@ -51,7 +57,7 @@ def loginuser(request):
         else:
             login(request, user)
             return redirect('home')
-
+@login_required
 def addtodo(request):
     if request.method == 'GET':
         return render(request,'todoapp/addtodo.html',{'form':TodoForm()})
@@ -64,7 +70,31 @@ def addtodo(request):
             return redirect('currenttodos')
         except ValueError:
             return render(request,'todoapp/addtodo.html',{'form':TodoForm(),'error':'Введены некоректные данные, попробуйте снова'})
-
+@login_required
 def detailtodo(request,todo_id):
     todo = get_object_or_404(Todo,pk = todo_id, user = request.user)
-    return render(request, 'todoapp/detailtodo.html', {'datatodo':todo})
+    if request.method == 'GET':
+        form = TodoForm(instance = todo)
+        return render(request, 'todoapp/detailtodo.html', {'datatodo':todo,'form':form})
+    else:
+        try:
+            infoForm = TodoForm(request.POST, instance = todo)
+            infoForm.save()
+            return redirect('currenttodos')
+        except ValueError:
+            return render(request,'todoapp/detailtodo.html',{'form':TodoForm(instance = todo),'error':'Введены некоректные данные, попробуйте снова'})
+
+
+@login_required
+def compleatetodo(request,todo_id):
+    todo = get_object_or_404(Todo,pk = todo_id, user = request.user)
+    if request.method == 'POST':
+        todo.datecompleat = timezone.now()
+        todo.save()
+        return redirect('currenttodos')
+@login_required
+def deletetodo(request,todo_id):
+    todo = get_object_or_404(Todo,pk = todo_id, user = request.user)
+    if request.method == 'POST':
+        todo.delete()
+        return redirect('currenttodos')
